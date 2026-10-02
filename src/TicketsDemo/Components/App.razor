@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["TicketsDemo.styles.css"]" />
+    <ImportMap />
+    <HeadOutlet @rendermode="InteractiveServerNoPrerender" />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServerNoPrerender" />
+    <ReconnectModal />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+
+</html>
+
+@code {
+    // Prerendering is off so the page loads tickets once (not twice) and the
+    // loading state is visible on first open.
+    private static readonly IComponentRenderMode InteractiveServerNoPrerender =
+        new InteractiveServerRenderMode(prerender: false);
+}

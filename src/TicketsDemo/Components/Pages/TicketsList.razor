@@ -1,0 +1,115 @@
+@page "/"
+@page "/tickets"
+@using System.Globalization
+@inject ITicketRepository Repository
+@inject ICurrentUser CurrentUser
+
+@* Page doc: specs/tickets-list.md (TICKETS-LIST). Update the doc and tests before changing behavior here. *@
+
+<PageTitle>Tickets</PageTitle>
+
+<header class="page-header">
+    <h1>Tickets</h1>
+    <label class="role-picker">
+        Naka-login bilang
+        <select aria-label="Role" @bind="CurrentUser.Role">
+            <option value="@UserRole.Agent">Agent</option>
+            <option value="@UserRole.Admin">Admin</option>
+        </select>
+    </label>
+</header>
+
+<div class="toolbar">
+    <input type="search" aria-label="Search tickets" placeholder="Search subject or requester"
+           @bind="searchText" @bind:event="oninput" />
+    <select aria-label="Status" @bind="statusFilter">
+        <option value="">All</option>
+        <option value="@TicketStatus.Open">Open</option>
+        <option value="@TicketStatus.Closed">Closed</option>
+    </select>
+    <button type="button" @onclick="LoadAsync">Refresh</button>
+    <button type="button" class="primary" disabled="@isLoading" @onclick="ExportCsv">Export CSV</button>
+</div>
+
+@if (exportMessage is not null)
+{
+    <p class="notice" role="status">@exportMessage</p>
+}
+
+@if (isLoading)
+{
+    <p class="loading" role="status">Loading tickets…</p>
+}
+else if (VisibleTickets.Count == 0)
+{
+    <div class="empty-state">
+        <p>No tickets found</p>
+        <button type="button" @onclick="ClearSearch">Clear search</button>
+    </div>
+}
+else
+{
+    <div class="table-wrap">
+        <table class="tickets">
+            <thead>
+                <tr>
+                    <th scope="col">Subject</th>
+                    <th scope="col">Requester</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Created</th>
+                    @if (IsAdmin)
+                    {
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var ticket in VisibleTickets)
+                {
+                    <tr @key="ticket.Id">
+                        <td class="subject">@ticket.Subject</td>
+                        <td>@ticket.Requester</td>
+                        <td><span class="status status-@ticket.Status.ToString().ToLowerInvariant()">@ticket.Status</span></td>
+                        <td>@ticket.Created.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</td>
+                        @if (IsAdmin)
+                        {
+                            <td class="actions">
+                                <button type="button" class="danger" @onclick="() => Delete(ticket)">Delete</button>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private List<Ticket> tickets = [];
+    private string searchText = "";
+    private TicketStatus? statusFilter;
+    private bool isLoading;
+    private string? exportMessage;
+
+    private IReadOnlyList<Ticket> VisibleTickets => TicketFilter.Apply(tickets, searchText, statusFilter);
+
+    private bool IsAdmin => CurrentUser.Role == UserRole.Admin;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        exportMessage = null;
+        tickets = [.. await Repository.GetAllAsync()];
+        isLoading = false;
+    }
+
+    private void ClearSearch() => searchText = "";
+
+    private void ExportCsv() =>
+        exportMessage = $"Export CSV (demo): {VisibleTickets.Count} ticket(s) would be exported. No file was created.";
+
+    // Demo only: removes the row from this page. It comes back after Refresh.
+    private void Delete(Ticket ticket) => tickets.Remove(ticket);
+}
