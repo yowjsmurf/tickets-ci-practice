@@ -9,7 +9,7 @@ public static class TicketFilter
         tickets
             .Where(t => status is null || t.Status == status)
             .Where(t => string.IsNullOrEmpty(search)
-                || t.Subject.Contains(search, StringComparison.OrdinalIgnoreCase)
-                || t.Requester.Contains(search, StringComparison.OrdinalIgnoreCase))
+                || t.Subject.Contains(search, StringComparison.Ordinal)
+                || t.Requester.Contains(search, StringComparison.Ordinal))
             .ToList();
 }
