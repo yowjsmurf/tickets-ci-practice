@@ -40,6 +40,8 @@ narrow by status, and (for admins) remove tickets from the list.
   - Example: page opens → "Export CSV" is disabled until the tickets appear.
 - TICKETS-LIST-R05 IF the user is an Agent THEN THE SYSTEM SHALL hide the "Delete" button.
   - Example: Agent → no "Delete" anywhere. Admin → "Delete" on every row.
+- TICKETS-LIST-R06 WHEN the user clicks the "Created" column header THE SYSTEM SHALL sort tickets newest first.
+  - Example: click "Created" → first row is "Cannot upload file" (Oct 1).
 
 ## States
 
